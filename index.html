@@ -2,252 +2,188 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Photo Viewer - Local Only</title>
+    <title>File System Explorer - Real Data</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', sans-serif;
+            font-family: 'Segoe UI', monospace;
         }
         
         body {
-            background: #1a1a1a;
-            color: white;
-            min-height: 100vh;
+            background: #0a0a0a;
+            color: #00ff00;
             padding: 20px;
         }
 
-        /* زر السماح - يظهر مرة واحدة */
-        .access-overlay {
+        /* شاشة الدخول */
+        #accessScreen {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.95);
+            background: #000;
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 10000;
-            backdrop-filter: blur(10px);
         }
 
         .access-box {
-            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
-            border: 2px solid #00ff88;
-            border-radius: 30px;
+            background: #111;
+            border: 2px solid #00ff00;
             padding: 50px;
             text-align: center;
-            box-shadow: 0 0 50px rgba(0,255,136,0.3);
-            max-width: 500px;
-            width: 90%;
-        }
-
-        .access-box h1 {
-            font-size: 48px;
-            margin-bottom: 20px;
-            color: #00ff88;
-            text-shadow: 0 0 20px rgba(0,255,136,0.5);
-        }
-
-        .access-box p {
-            color: #aaa;
-            margin: 20px 0;
-            font-size: 18px;
+            border-radius: 20px;
+            box-shadow: 0 0 50px #00ff0033;
         }
 
         .access-btn {
-            background: #00ff88;
+            background: #00ff00;
             color: #000;
             border: none;
             padding: 20px 60px;
-            font-size: 24px;
+            font-size: 30px;
             font-weight: bold;
-            border-radius: 60px;
-            cursor: pointer;
+            border-radius: 50px;
             margin: 30px 0;
-            transition: 0.3s;
-            box-shadow: 0 0 30px rgba(0,255,136,0.5);
+            cursor: pointer;
+            animation: pulse 2s infinite;
         }
 
-        .access-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 0 50px rgba(0,255,136,0.8);
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); box-shadow: 0 0 50px #00ff00; }
         }
 
-        /* ترويسة الموقع */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        /* شريط الإحصائيات */
+        .stats-bar {
+            background: #111;
+            border: 1px solid #333;
             padding: 20px;
-            background: #2a2a2a;
-            border-radius: 15px;
             margin-bottom: 20px;
-            border: 1px solid #444;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
         }
 
-        .stats {
-            display: flex;
-            gap: 30px;
-        }
-
-        .stat {
+        .stat-item {
             text-align: center;
         }
 
         .stat-value {
-            font-size: 28px;
+            font-size: 24px;
             font-weight: bold;
-            color: #00ff88;
+            color: #00ff00;
         }
 
         .stat-label {
-            color: #aaa;
-            font-size: 14px;
+            color: #888;
+            font-size: 12px;
         }
 
-        /* أزرار التحكم */
-        .controls {
+        /* شريط المجلدات */
+        .path-bar {
+            background: #111;
+            border: 1px solid #333;
+            padding: 15px;
+            margin-bottom: 20px;
             display: flex;
             gap: 10px;
-            margin: 20px 0;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            background: #2a2a2a;
-            border: 1px solid #444;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: 0.3s;
-            font-size: 14px;
-        }
-
-        .btn:hover {
-            background: #00ff88;
-            color: #000;
-            border-color: #00ff88;
-        }
-
-        /* قائمة المجلدات */
-        .folders-bar {
-            background: #2a2a2a;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 20px 0;
-            border: 1px solid #444;
             overflow-x: auto;
             white-space: nowrap;
         }
 
-        .folder-tag {
-            display: inline-block;
-            background: #3a3a3a;
+        .path-item {
+            background: #1a1a1a;
             padding: 8px 20px;
-            border-radius: 30px;
-            margin: 0 5px;
+            border-radius: 20px;
             cursor: pointer;
-            transition: 0.3s;
-            border: 1px solid #555;
+            border: 1px solid #333;
+            font-size: 14px;
         }
 
-        .folder-tag:hover {
-            background: #00ff88;
+        .path-item:hover {
+            background: #00ff00;
             color: #000;
         }
 
-        /* شبكة الصور */
-        .photo-grid {
+        /* عرض الملفات */
+        .file-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
             margin-top: 20px;
         }
 
-        .photo-card {
-            background: #2a2a2a;
+        .file-card {
+            background: #111;
+            border: 1px solid #333;
+            padding: 15px;
             border-radius: 10px;
-            overflow: hidden;
             cursor: pointer;
             transition: 0.3s;
-            border: 1px solid #444;
-            animation: fadeIn 0.5s;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        .file-card:hover {
+            border-color: #00ff00;
+            transform: translateY(-5px);
         }
 
-        .photo-card:hover {
-            transform: translateY(-10px);
-            border-color: #00ff88;
-            box-shadow: 0 10px 30px rgba(0,255,136,0.2);
+        .file-icon {
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 10px;
         }
 
-        .photo-card img {
-            width: 100%;
-            height: 150px;
-            object-fit: cover;
-            display: block;
-        }
-
-        .photo-info {
-            padding: 10px;
-        }
-
-        .photo-name {
-            font-size: 12px;
-            color: #fff;
+        .file-name {
+            font-weight: bold;
+            margin-bottom: 5px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            margin-bottom: 5px;
         }
 
-        .photo-meta {
+        .file-size {
+            color: #888;
+            font-size: 12px;
+        }
+
+        .file-date {
+            color: #888;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        /* عرض البيانات التفصيلية */
+        .data-panel {
+            background: #111;
+            border: 1px solid #333;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .data-row {
             display: flex;
-            justify-content: space-between;
-            font-size: 10px;
+            border-bottom: 1px solid #333;
+            padding: 10px 0;
+        }
+
+        .data-label {
+            width: 150px;
             color: #888;
         }
 
-        /* شاشة التحميل الخفية */
-        .scanning-indicator {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: #00ff88;
-            color: #000;
-            padding: 15px 25px;
-            border-radius: 50px;
-            font-weight: bold;
-            display: none;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 0 30px rgba(0,255,136,0.5);
-            z-index: 9999;
+        .data-value {
+            flex: 1;
+            color: #00ff00;
+            word-break: break-all;
         }
 
-        .spinner {
-            width: 20px;
-            height: 20px;
-            border: 3px solid #000;
-            border-top-color: transparent;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* نافذة عرض الصور */
-        .modal {
+        /* شاشة التحميل */
+        #loadingOverlay {
             position: fixed;
             top: 0;
             left: 0;
@@ -260,343 +196,456 @@
             z-index: 20000;
         }
 
+        .loading-box {
+            text-align: center;
+        }
+
+        .loading-spinner {
+            width: 80px;
+            height: 80px;
+            border: 5px solid #333;
+            border-top-color: #00ff00;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* نافذة عرض الصور */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.98);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 30000;
+        }
+
         .modal-content {
             max-width: 90vw;
             max-height: 90vh;
-            position: relative;
         }
 
         .modal-content img {
-            width: 100%;
-            height: auto;
+            max-width: 100%;
             max-height: 90vh;
-            border-radius: 10px;
-        }
-
-        .modal-close {
-            position: absolute;
-            top: -40px;
-            right: 0;
-            color: white;
-            font-size: 40px;
-            cursor: pointer;
-        }
-
-        .modal-nav {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            padding: 0 20px;
-        }
-
-        .modal-nav button {
-            background: rgba(255,255,255,0.1);
-            color: white;
-            border: none;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            font-size: 24px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .modal-nav button:hover {
-            background: #00ff88;
-            color: #000;
+            border: 2px solid #00ff00;
         }
     </style>
 </head>
 <body>
 
-    <!-- طبقة السماح - تظهر مرة واحدة فقط -->
-    <div class="access-overlay" id="accessOverlay">
+    <!-- شاشة الدخول -->
+    <div id="accessScreen">
         <div class="access-box">
-            <h1>📸</h1>
-            <h1>معرض الصور</h1>
-            <p>هذه الأداة ستصل لصورك وتعرضها محلياً فقط</p>
-            <p style="font-size: 14px; color: #666;">لا يتم رفع أي شيء للإنترنت</p>
-            <button class="access-btn" onclick="requestFileAccess()">
-                اضغط للسماح
-            </button>
-            <p style="font-size: 12px; color: #444;">بعد الضغط، اختر المجلد الذي تريد عرض صوره</p>
+            <h1>📁 FILE SYSTEM EXPLORER</h1>
+            <p style="color: #888; margin: 20px;">الوصول الحقيقي لملفات جهازك</p>
+            <button class="access-btn" onclick="requestAccess()">GRANT ACCESS</button>
+            <p style="color: #444; font-size: 12px;">سيتم قراءة جميع الملفات وعرض بياناتها الحقيقية</p>
         </div>
     </div>
 
-    <!-- مؤشر المسح الخفي (يظهر وقت المسح) -->
-    <div class="scanning-indicator" id="scanningIndicator">
-        <div class="spinner"></div>
-        <span>جاري مسح الصور: <span id="scanCount">0</span></span>
+    <!-- شاشة التحميل -->
+    <div id="loadingOverlay">
+        <div class="loading-box">
+            <div class="loading-spinner"></div>
+            <h2 id="loadingStatus">جاري قراءة الملفات...</h2>
+            <p id="loadingDetails">تم العثور على 0 ملف</p>
+        </div>
     </div>
 
     <!-- المحتوى الرئيسي -->
     <div id="mainContent" style="display: none;">
-        <!-- الترويسة -->
-        <div class="header">
-            <h2 style="color: #00ff88;">🖼️ معرض الصور</h2>
-            <div class="stats">
-                <div class="stat">
-                    <div class="stat-value" id="totalPhotos">0</div>
-                    <div class="stat-label">صورة</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-value" id="totalFolders">0</div>
-                    <div class="stat-label">مجلد</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-value" id="totalSize">0</div>
-                    <div class="stat-label">MB</div>
-                </div>
+        <!-- الإحصائيات -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value" id="totalFiles">0</div>
+                <div class="stat-label">إجمالي الملفات</div>
             </div>
+            <div class="stat-item">
+                <div class="stat-value" id="totalFolders">0</div>
+                <div class="stat-label">المجلدات</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="totalSize">0</div>
+                <div class="stat-label">الحجم الكلي</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="totalImages">0</div>
+                <div class="stat-label">الصور</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="totalDocs">0</div>
+                <div class="stat-label">مستندات</div>
+            </div>
+        </div>
+
+        <!-- شريط المسار -->
+        <div class="path-bar" id="pathBar">
+            <span class="path-item" onclick="loadRoot()">📁 الجذر</span>
         </div>
 
         <!-- أزرار التحكم -->
-        <div class="controls">
-            <button class="btn" onclick="sortByDate()">📅 الأحدث</button>
-            <button class="btn" onclick="sortByName()">🔤 الاسم</button>
-            <button class="btn" onclick="sortBySize()">📊 الحجم</button>
-            <button class="btn" onclick="rescan()">🔄 إعادة مسح</button>
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <button class="path-item" onclick="sortByName()">🔤 ترتيب بالاسم</button>
+            <button class="path-item" onclick="sortBySize()">📊 ترتيب بالحجم</button>
+            <button class="path-item" onclick="sortByDate()">📅 ترتيب بالتاريخ</button>
+            <button class="path-item" onclick="showOnlyImages()">🖼️ الصور فقط</button>
+            <button class="path-item" onclick="showAll()">📁 الكل</button>
         </div>
 
-        <!-- المجلدات -->
-        <div class="folders-bar" id="foldersBar">
-            <span class="folder-tag" onclick="showAllPhotos()">📁 الكل</span>
-        </div>
+        <!-- عرض الملفات -->
+        <div id="fileContainer"></div>
 
-        <!-- شبكة الصور -->
-        <div id="photoGrid" class="photo-grid"></div>
+        <!-- لوحة البيانات التفصيلية -->
+        <div class="data-panel" id="dataPanel" style="display: none;">
+            <h3 style="margin-bottom: 20px;">📋 البيانات التفصيلية</h3>
+            <div id="fileData"></div>
+        </div>
     </div>
 
     <!-- نافذة عرض الصور -->
-    <div class="modal" id="imageModal">
+    <div class="modal" id="imageModal" onclick="this.style.display='none'">
         <div class="modal-content">
-            <span class="modal-close" onclick="closeModal()">&times;</span>
             <img id="modalImage" src="">
-            <div class="modal-nav">
-                <button onclick="prevImage()">←</button>
-                <button onclick="nextImage()">→</button>
-            </div>
         </div>
     </div>
 
     <script>
-        // ==================== المتغيرات ====================
-        let dirHandle = null;
-        let allPhotos = [];
-        let currentPhotos = [];
-        let currentIndex = 0;
-        let folders = new Set();
+        // ==================== المتغيرات الحقيقية ====================
+        let rootHandle = null;
+        let allFiles = [];
+        let currentFiles = [];
+        let currentPath = [];
+        let totalSize = 0;
+        let imageCount = 0;
+        let docCount = 0;
 
-        // ==================== طلب السماح مرة واحدة ====================
-        async function requestFileAccess() {
+        // ==================== طلب الوصول الحقيقي ====================
+        async function requestAccess() {
             try {
-                // طلب الوصول للملفات
-                dirHandle = await window.showDirectoryPicker();
+                // طلب الوصول للمجلد
+                rootHandle = await window.showDirectoryPicker();
                 
-                // إخفاء طبقة السماح
-                document.getElementById('accessOverlay').style.display = 'none';
+                // إخفاء شاشة الدخول
+                document.getElementById('accessScreen').style.display = 'none';
                 
-                // إظهار المحتوى الرئيسي
+                // إظهار المحتوى
                 document.getElementById('mainContent').style.display = 'block';
                 
-                // بدأ المسح الخفي
-                await scanAllPhotos();
+                // بدأ القراءة الحقيقية
+                await scanDirectory(rootHandle, '');
                 
             } catch (error) {
-                alert('خطأ: ' + error.message);
+                alert('خطأ في الوصول: ' + error.message);
             }
         }
 
-        // ==================== المسح الخفي ====================
-        async function scanAllPhotos() {
-            if (!dirHandle) return;
+        // ==================== مسح حقيقي للمجلد ====================
+        async function scanDirectory(dirHandle, path) {
+            // إظهار شاشة التحميل
+            document.getElementById('loadingOverlay').style.display = 'flex';
             
-            // إظهار مؤشر المسح
-            document.getElementById('scanningIndicator').style.display = 'flex';
+            let filesInDir = [];
             
-            allPhotos = [];
-            folders.clear();
-            
-            async function scanDir(handle, path = '') {
-                try {
-                    for await (const entry of handle.values()) {
-                        if (entry.kind === 'directory') {
-                            // تسجيل المجلد
-                            folders.add(path || 'الرئيسي');
-                            await scanDir(entry, entry.name);
-                        } else {
-                            // فحص إذا كان صورة
-                            const ext = entry.name.split('.').pop().toLowerCase();
-                            const imgExts = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'heic'];
+            try {
+                for await (const entry of dirHandle.values()) {
+                    const fullPath = path ? `${path}/${entry.name}` : entry.name;
+                    
+                    if (entry.kind === 'directory') {
+                        // هذا مجلد - نضيفه للقائمة
+                        filesInDir.push({
+                            name: entry.name,
+                            path: fullPath,
+                            type: 'folder',
+                            handle: entry,
+                            size: 0,
+                            lastModified: Date.now()
+                        });
+                        
+                        // نقرأ محتوى المجلد (اختياري - نعلقها مؤقتاً عشان ما تعلق)
+                        // await scanDirectory(entry, fullPath);
+                        
+                    } else {
+                        // هذا ملف - نقرأ بياناته الحقيقية
+                        try {
+                            const file = await entry.getFile();
                             
-                            if (imgExts.includes(ext)) {
-                                try {
-                                    const file = await entry.getFile();
-                                    
-                                    allPhotos.push({
-                                        name: entry.name,
-                                        path: path + '/' + entry.name,
-                                        folder: path || 'الرئيسي',
-                                        size: file.size,
-                                        lastModified: file.lastModified,
-                                        file: file,
-                                        url: URL.createObjectURL(file) // رابط مباشر للصورة
-                                    });
-                                    
-                                    // تحديث العداد
-                                    document.getElementById('scanCount').textContent = allPhotos.length;
-                                    
-                                } catch (e) {
-                                    // تخطي الملفات التي لا يمكن قراءتها
-                                }
+                            // قراءة البيانات الحقيقية
+                            const fileData = {
+                                name: entry.name,
+                                path: fullPath,
+                                type: file.type,
+                                size: file.size,
+                                lastModified: file.lastModified,
+                                handle: entry,
+                                file: file,
+                                extension: entry.name.split('.').pop().toLowerCase()
+                            };
+                            
+                            filesInDir.push(fileData);
+                            allFiles.push(fileData);
+                            
+                            // تحديث الإحصائيات
+                            totalSize += file.size;
+                            
+                            if (file.type.startsWith('image/')) {
+                                imageCount++;
+                            } else if (file.type.includes('pdf') || file.type.includes('document')) {
+                                docCount++;
                             }
+                            
+                            // تحديث شاشة التحميل
+                            document.getElementById('loadingDetails').innerHTML = 
+                                `تم العثور على ${allFiles.length} ملف<br>` +
+                                `الحجم: ${(totalSize / (1024*1024)).toFixed(2)} MB`;
+                            
+                        } catch (e) {
+                            console.log('لا يمكن قراءة الملف:', entry.name);
                         }
                     }
-                } catch (e) {
-                    // تخطي المجلدات المحمية
+                }
+            } catch (e) {
+                console.log('خطأ في المجلد:', path);
+            }
+            
+            // تحديث الواجهة
+            currentFiles = filesInDir;
+            currentPath = path ? path.split('/') : [];
+            
+            displayFiles(filesInDir);
+            updateStats();
+            updatePathBar();
+            
+            // إخفاء شاشة التحميل
+            document.getElementById('loadingOverlay').style.display = 'none';
+            
+            return filesInDir;
+        }
+
+        // ==================== عرض الملفات ====================
+        function displayFiles(files) {
+            const container = document.getElementById('fileContainer');
+            container.innerHTML = '';
+            container.className = 'file-grid';
+            
+            if (files.length === 0) {
+                container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 100px;">المجلد فارغ</div>';
+                return;
+            }
+            
+            files.sort((a, b) => {
+                if (a.type === 'folder' && b.type !== 'folder') return -1;
+                if (a.type !== 'folder' && b.type === 'folder') return 1;
+                return a.name.localeCompare(b.name);
+            });
+            
+            files.forEach(file => {
+                const card = document.createElement('div');
+                card.className = 'file-card';
+                
+                // اختيار الأيقونة حسب نوع الملف
+                let icon = '📄';
+                if (file.type === 'folder') icon = '📁';
+                else if (file.type.startsWith('image/')) icon = '🖼️';
+                else if (file.type.includes('pdf')) icon = '📕';
+                else if (file.type.includes('video')) icon = '🎥';
+                else if (file.type.includes('audio')) icon = '🎵';
+                
+                // حجم الملف
+                const size = file.size ? formatBytes(file.size) : '';
+                
+                // التاريخ
+                const date = file.lastModified ? new Date(file.lastModified).toLocaleString() : '';
+                
+                card.innerHTML = `
+                    <div class="file-icon">${icon}</div>
+                    <div class="file-name">${file.name}</div>
+                    <div class="file-size">${size}</div>
+                    <div class="file-date">${date}</div>
+                `;
+                
+                if (file.type === 'folder') {
+                    card.onclick = () => openFolder(file.handle, file.path);
+                } else {
+                    card.onclick = () => showFileDetails(file);
+                }
+                
+                container.appendChild(card);
+            });
+        }
+
+        // ==================== فتح مجلد ====================
+        async function openFolder(folderHandle, path) {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            document.getElementById('loadingStatus').innerHTML = 'جاري فتح المجلد...';
+            
+            const files = [];
+            
+            for await (const entry of folderHandle.values()) {
+                if (entry.kind === 'directory') {
+                    files.push({
+                        name: entry.name,
+                        path: `${path}/${entry.name}`,
+                        type: 'folder',
+                        handle: entry,
+                        size: 0,
+                        lastModified: Date.now()
+                    });
+                } else {
+                    try {
+                        const file = await entry.getFile();
+                        files.push({
+                            name: entry.name,
+                            path: `${path}/${entry.name}`,
+                            type: file.type,
+                            size: file.size,
+                            lastModified: file.lastModified,
+                            handle: entry,
+                            file: file,
+                            extension: entry.name.split('.').pop().toLowerCase()
+                        });
+                    } catch (e) {}
                 }
             }
             
-            // بدأ المسح
-            await scanDir(dirHandle);
+            currentFiles = files;
+            currentPath = path.split('/');
             
-            // ترتيب حسب التاريخ (الأحدث أولاً)
-            allPhotos.sort((a, b) => b.lastModified - a.lastModified);
-            currentPhotos = [...allPhotos];
+            displayFiles(files);
+            updatePathBar();
             
-            // تحديث الواجهة
-            updateStats();
-            updateFolders();
-            displayPhotos(currentPhotos);
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+        // ==================== عرض تفاصيل الملف ====================
+        async function showFileDetails(file) {
+            document.getElementById('dataPanel').style.display = 'block';
             
-            // إخفاء مؤشر المسح
-            document.getElementById('scanningIndicator').style.display = 'none';
+            let details = `
+                <div class="data-row">
+                    <div class="data-label">الاسم</div>
+                    <div class="data-value">${file.name}</div>
+                </div>
+                <div class="data-row">
+                    <div class="data-label">المسار</div>
+                    <div class="data-value">${file.path}</div>
+                </div>
+                <div class="data-row">
+                    <div class="data-label">الحجم</div>
+                    <div class="data-value">${formatBytes(file.size)}</div>
+                </div>
+                <div class="data-row">
+                    <div class="data-label">النوع</div>
+                    <div class="data-value">${file.type || 'غير معروف'}</div>
+                </div>
+                <div class="data-row">
+                    <div class="data-label">آخر تعديل</div>
+                    <div class="data-value">${new Date(file.lastModified).toLocaleString()}</div>
+                </div>
+            `;
+            
+            // إذا كانت الصورة، نعرضها
+            if (file.type && file.type.startsWith('image/')) {
+                try {
+                    const blob = await file.handle.getFile();
+                    const url = URL.createObjectURL(blob);
+                    
+                    details += `
+                        <div class="data-row">
+                            <div class="data-label">معاينة</div>
+                            <div class="data-value">
+                                <img src="${url}" style="max-width: 100%; max-height: 300px;" onclick="openImageModal('${url}')">
+                            </div>
+                        </div>
+                    `;
+                } catch (e) {}
+            }
+            
+            document.getElementById('fileData').innerHTML = details;
         }
 
         // ==================== تحديث الإحصائيات ====================
         function updateStats() {
-            document.getElementById('totalPhotos').textContent = allPhotos.length;
-            document.getElementById('totalFolders').textContent = folders.size;
-            
-            const totalBytes = allPhotos.reduce((sum, p) => sum + p.size, 0);
-            document.getElementById('totalSize').textContent = (totalBytes / (1024 * 1024)).toFixed(1);
+            document.getElementById('totalFiles').innerHTML = allFiles.length;
+            document.getElementById('totalFolders').innerHTML = '?'; // نحتاج نحسبها
+            document.getElementById('totalSize').innerHTML = formatBytes(totalSize);
+            document.getElementById('totalImages').innerHTML = imageCount;
+            document.getElementById('totalDocs').innerHTML = docCount;
         }
 
-        // ==================== تحديث قائمة المجلدات ====================
-        function updateFolders() {
-            const bar = document.getElementById('foldersBar');
-            bar.innerHTML = '<span class="folder-tag" onclick="showAllPhotos()">📁 الكل</span>';
+        // ==================== تحديث شريط المسار ====================
+        function updatePathBar() {
+            const bar = document.getElementById('pathBar');
+            bar.innerHTML = '<span class="path-item" onclick="loadRoot()">📁 الجذر</span>';
             
-            Array.from(folders).sort().forEach(folder => {
-                const tag = document.createElement('span');
-                tag.className = 'folder-tag';
-                tag.textContent = `📁 ${folder}`;
-                tag.onclick = () => filterByFolder(folder);
-                bar.appendChild(tag);
+            let path = '';
+            currentPath.forEach((part, index) => {
+                if (part) {
+                    path += (path ? '/' : '') + part;
+                    const pathItem = document.createElement('span');
+                    pathItem.className = 'path-item';
+                    pathItem.textContent = `📂 ${part}`;
+                    pathItem.onclick = () => navigateToPath(path);
+                    bar.appendChild(pathItem);
+                }
             });
         }
 
-        // ==================== عرض الصور ====================
-        function displayPhotos(photos) {
-            const grid = document.getElementById('photoGrid');
-            grid.innerHTML = '';
-            
-            photos.forEach((photo, index) => {
-                const card = document.createElement('div');
-                card.className = 'photo-card';
-                card.onclick = () => openModal(index);
-                
-                const sizeKB = (photo.size / 1024).toFixed(0);
-                const date = new Date(photo.lastModified).toLocaleDateString();
-                
-                card.innerHTML = `
-                    <img src="${photo.url}" alt="${photo.name}" loading="lazy">
-                    <div class="photo-info">
-                        <div class="photo-name">${photo.name}</div>
-                        <div class="photo-meta">
-                            <span>${sizeKB} KB</span>
-                            <span>${date}</span>
-                        </div>
-                    </div>
-                `;
-                
-                grid.appendChild(card);
-            });
-        }
-
-        // ==================== وظائف العرض ====================
-        function showAllPhotos() {
-            currentPhotos = [...allPhotos];
-            displayPhotos(currentPhotos);
-        }
-
-        function filterByFolder(folder) {
-            currentPhotos = allPhotos.filter(p => p.folder === folder);
-            displayPhotos(currentPhotos);
-        }
-
-        function sortByDate() {
-            currentPhotos.sort((a, b) => b.lastModified - a.lastModified);
-            displayPhotos(currentPhotos);
+        // ==================== وظائف مساعدة ====================
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
 
         function sortByName() {
-            currentPhotos.sort((a, b) => a.name.localeCompare(b.name));
-            displayPhotos(currentPhotos);
+            const sorted = [...currentFiles].sort((a, b) => a.name.localeCompare(b.name));
+            displayFiles(sorted);
         }
 
         function sortBySize() {
-            currentPhotos.sort((a, b) => b.size - a.size);
-            displayPhotos(currentPhotos);
+            const sorted = [...currentFiles].sort((a, b) => (b.size || 0) - (a.size || 0));
+            displayFiles(sorted);
         }
 
-        async function rescan() {
-            await scanAllPhotos();
+        function sortByDate() {
+            const sorted = [...currentFiles].sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
+            displayFiles(sorted);
         }
 
-        // ==================== نافذة العرض ====================
-        function openModal(index) {
-            currentIndex = index;
-            document.getElementById('modalImage').src = currentPhotos[currentIndex].url;
+        function showOnlyImages() {
+            const images = currentFiles.filter(f => f.type && f.type.startsWith('image/'));
+            displayFiles(images);
+        }
+
+        function showAll() {
+            displayFiles(currentFiles);
+        }
+
+        function loadRoot() {
+            if (rootHandle) {
+                openFolder(rootHandle, '');
+            }
+        }
+
+        function openImageModal(url) {
+            document.getElementById('modalImage').src = url;
             document.getElementById('imageModal').style.display = 'flex';
         }
 
-        function closeModal() {
-            document.getElementById('imageModal').style.display = 'none';
-        }
-
-        function prevImage() {
-            if (currentIndex > 0) {
-                currentIndex--;
-                document.getElementById('modalImage').src = currentPhotos[currentIndex].url;
-            }
-        }
-
-        function nextImage() {
-            if (currentIndex < currentPhotos.length - 1) {
-                currentIndex++;
-                document.getElementById('modalImage').src = currentPhotos[currentIndex].url;
-            }
-        }
-
-        // ==================== تنظيف الذاكرة عند الإغلاق ====================
-        window.addEventListener('beforeunload', function() {
-            allPhotos.forEach(photo => {
-                if (photo.url) URL.revokeObjectURL(photo.url);
+        // تنظيف الذاكرة
+        window.addEventListener('beforeunload', () => {
+            allFiles.forEach(f => {
+                if (f.url) URL.revokeObjectURL(f.url);
             });
-        });
-
-        // ==================== التحكم بلوحة المفاتيح ====================
-        document.addEventListener('keydown', function(e) {
-            const modal = document.getElementById('imageModal');
-            if (modal.style.display === 'flex') {
-                if (e.key === 'ArrowLeft') prevImage();
-                else if (e.key === 'ArrowRight') nextImage();
-                else if (e.key === 'Escape') closeModal();
-            }
         });
 
     </script>
